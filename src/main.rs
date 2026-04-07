@@ -141,9 +141,31 @@ fn load_db_config() -> Result<DbConfig> {
     })
 }
 
+/// Resolve the FreeTDS ODBC driver path.
+/// Prefers a bundled copy next to the binary; falls back to homebrew or the
+/// ODBC registry name "FreeTDS" if nothing else is found.
+fn freetds_driver_path() -> String {
+    // 1. Bundled: <exe>/../lib/ucsfomop/libtdsodbc.so
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(bin_dir) = exe.parent() {
+            let bundled = bin_dir.join("../lib/ucsfomop/libtdsodbc.so");
+            if let Ok(resolved) = bundled.canonicalize() {
+                return resolved.to_string_lossy().into_owned();
+            }
+        }
+    }
+    // 2. Homebrew arm64
+    if std::path::Path::new("/opt/homebrew/lib/libtdsodbc.so").exists() {
+        return "/opt/homebrew/lib/libtdsodbc.so".to_string();
+    }
+    // 3. System ODBC registry name as last resort
+    "FreeTDS".to_string()
+}
+
 fn conn_string(cfg: &DbConfig) -> String {
+    let driver = freetds_driver_path();
     format!(
-        "DRIVER=FreeTDS;SERVER={};PORT=1433;DATABASE={};UID={};PWD={};TDS_Version=7.4;Encrypt=yes;TrustServerCertificate=yes;",
+        "DRIVER={driver};SERVER={};PORT=1433;DATABASE={};UID={};PWD={};TDS_Version=7.4;Encrypt=yes;TrustServerCertificate=yes;",
         cfg.server, cfg.database, cfg.username, cfg.password
     )
 }
