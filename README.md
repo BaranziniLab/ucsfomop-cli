@@ -21,7 +21,7 @@ A command-line tool for querying the UCSF OMOP de-identified electronic health r
 The `dist/ucsfomop-bundle/` directory contains a fully self-contained bundle — all required native libraries are included and pre-patched so nothing needs to be installed system-wide.
 
 ```bash
-git clone https://github.com/Broccolito/ucsfomop-cli
+git clone https://github.com/BaranziniLab/ucsfomop-cli
 cd ucsfomop-cli/dist/ucsfomop-bundle
 bash install.sh
 ```
